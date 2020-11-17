@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StringType,StructType,StructField,IntegerType,DoubleType,TimestampType
+from src.main.code.myfunctions import read_schema
 import configparser
 from pyspark.sql import functions as F
 
@@ -8,26 +8,29 @@ from pyspark.sql import functions as F
 spark = SparkSession.builder.master("local").appName("DataIngestAndRefine").getOrCreate()
 
 
-# Reading the configs
-config=configparser.ConfigParser()
+# Reading from the configs
+config = configparser.ConfigParser()
 config.read(r'../projectconfigs/config.ini')
-inputLocation=config.get('paths','inputLocation')
+inputLocation = config.get('paths','inputLocation')
+landingFileSchemaFromConf = config.get('Schema','landingFileSchema')
+
+landingFileSchema = read_schema(landingFileSchemaFromConf)
 
 #Reading the landing zone files
 
-LandingFileSchema=StructType([
-    StructField('Sale_ID',StringType(),True),
-    StructField('Product_ID',StringType(),True),
-    StructField('Quantity_Sold',IntegerType(),True),
-    StructField('Vendor_ID',StringType(),True),
-    StructField('Sale_Date',TimestampType(),True),
-    StructField('Sale_Amount',DoubleType(),True),
-    StructField('Sale_Currency',StringType(),True)
-])
+# LandingFileSchema=StructType([
+#     StructField('Sale_ID',StringType(),True),
+#     StructField('Product_ID',StringType(),True),
+#     StructField('Quantity_Sold',IntegerType(),True),
+#     StructField('Vendor_ID',StringType(),True),
+#     StructField('Sale_Date',TimestampType(),True),
+#     StructField('Sale_Amount',DoubleType(),True),
+#     StructField('Sale_Currency',StringType(),True)
+# ])
 
 #Dataframe defining
 
-landingFileDF=spark.read.schema(LandingFileSchema).\
+landingFileDF = spark.read.schema(landingFileSchema).\
     option("delimiter","|").\
     csv(inputLocation)
 landingFileDF.show()
