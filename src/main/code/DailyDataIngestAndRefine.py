@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
 from src.main.code.myfunctions import read_schema
 import configparser
+from datetime import datetime,date,time,timedelta
 from pyspark.sql import functions as F
 
 # Initiating Spark Session
@@ -15,6 +16,13 @@ inputLocation = config.get('paths','inputLocation')
 landingFileSchemaFromConf = config.get('Schema','landingFileSchema')
 
 landingFileSchema = read_schema(landingFileSchemaFromConf)
+
+
+# Handing Dates
+today = datetime.now()
+yesterday = today-timedelta(1)
+PreviousDaySuffix = "_" + yesterday.strftime('%d%m%y')
+currentDaySuffix = "_" + today.strftime("%d%m%y")
 
 #Reading the landing zone files
 
@@ -32,5 +40,8 @@ landingFileSchema = read_schema(landingFileSchemaFromConf)
 
 landingFileDF = spark.read.schema(landingFileSchema).\
     option("delimiter","|").\
-    csv(inputLocation)
+    option("header","true").\
+    csv(inputLocation+"\Sales_Landing\SalesDump"+currentDaySuffix)
+
+
 landingFileDF.show()
